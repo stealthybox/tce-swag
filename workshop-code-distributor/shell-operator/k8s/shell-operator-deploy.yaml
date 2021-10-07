@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: code-distributor
+  namespace: default
+  labels:
+    app: code-distributor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: code-distributor
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: code-distributor
+    spec:
+      serviceAccountName: code-distributor
+      containers:
+      - name: shell-operator
+        image: ghcr.io/stealthybox/code-distributor:dev2
+        imagePullPolicy: IfNotPresent

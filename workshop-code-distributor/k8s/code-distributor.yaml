@@ -1,0 +1,150 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: code-distributor
+  labels:
+    app: code-distributor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: code-distributor
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: code-distributor
+    spec:
+      serviceAccountName: code-distributor
+      containers:
+      - image: bitnami/kubectl:latest
+        name: code-distributor
+        command:
+        - bash
+        - -c
+        - |
+          #!/usr/bin/env bash
+          function reconcile_session() {
+            sessionName=${1}
+            
+            # we have the workshop session name
+            # check if we labeled a code for that session
+            codeName="$(kubectl get cm -n ${CODES_NAMESPACE} -l workshop_session=${sessionName} --no-headers -o custom-columns=NAME:.metadata.name | head -n1)"
+            if [[ $codeName = "" ]]; then
+              # no code yet, get a random code that's unlabeled
+              codeName="$(kubectl get cm -n ${CODES_NAMESPACE} -l workshop_session=none --no-headers -o custom-columns=NAME:.metadata.name | sort -R |head -n1)"
+              # label it, now we can use it
+              kubectl label cm -n "${CODES_NAMESPACE}" "${codeName}" --overwrite workshop_session=${sessionName}
+            fi
+            # we have a labeled code, either from before or just now
+            code="$(kubectl get cm -n "${CODES_NAMESPACE}" "${codeName}" -ojsonpath='{.data.code}')"
+            echo ${code}
+            # get the namespace for the session (most likely the same)
+            namespace="$(kubectl get ns -l training.eduk8s.io/session.name=${sessionName} --no-headers -o custom-columns=NAME:.metadata.name)"
+            # apply the code to the namespace
+            cat << EOF | kubectl apply -f-
+          ---
+          kind: ConfigMap
+          apiVersion: v1
+          metadata:
+            name: code
+            namespace: ${namespace}
+          data:
+            code: ${code}
+          EOF
+          }
+
+          CODES_NAMESPACE=default
+          SYNC_PERIOD="${SYNC_PERIOD:-"10"}"
+
+          set -xeu
+
+          old_hash=""
+          reconcile() {
+            sessions=$(kubectl get workshopsessions | grep Allocated | awk '{print $1}')
+
+            # hash="$(
+            #   printf "${sessions}" | sha256sum
+            #   )"
+            # if [ "${hash}" = "${old_hash}" ]; then
+            #   return # no changes, do nothing
+            # fi
+            # old_hash="${hash}"
+
+            for s in $(echo $sessions); do
+              reconcile_session $s
+            done
+
+            # free memory
+            sessions=""
+          }
+
+          pause_loop() {
+            sleep "${SYNC_PERIOD}" || true
+          }
+
+          graceful_exit() {
+            echo "--- received interrupt ---"
+            job_ids="$(
+              jobs \
+                | grep "pause_loop" \
+                | tr [] " " \
+                | awk '{print "%" $1}'
+              )"
+            # shellcheck disable=SC2086
+            if [ "${job_ids}" ]; then
+              kill ${job_ids}
+            fi
+            wait
+            echo "< clean exit >"
+          }
+
+          trap graceful_exit INT TERM
+
+          while true; do
+            reconcile & wait $!
+            pause_loop & wait $!
+          done
+        env:
+        - name: CODES_NAMESPACE
+          value: default
+        - name: SYNC_PERIOD
+          value: "10"
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: code-distributor
+  namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: code-distributor
+rules:
+- apiGroups: [""]
+  resources: ["namespaces", "configmaps", "workshopsessions"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "watch", "list", "create", "update", "patch"]
+- apiGroups: ["training.eduk8s.io"]
+  resources: ["workshopsessions"]
+  verbs: ["get", "watch", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: code-distributor
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: code-distributor
+subjects:
+  - kind: ServiceAccount
+    name: code-distributor
+    namespace: default
