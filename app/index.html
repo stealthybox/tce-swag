@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Tanzu Community Edition Swag</title>
+        <style>
+            body {
+                width: 28em;
+                margin: 0 auto;
+                font-family: Tahoma, Verdana, Arial, sans-serif;
+                text-align: center;
+                color: #222222;
+            }
+        </style>
+        <script>
+            fetch('/code/')
+                .then(response => response.text())
+                .then(code => document.getElementById('code').innerText = code)
+        </script>
+    </head>
+    <body>
+        <div style="background: #85c6db; padding: 0.01em; border-radius: 0 0 2em 2em;">
+            <!-- <h2>Your Access Code:</h1>
+            <h1 id="code"></h1> -->
+            You've completed the workshop!</br>
+            Enter your email and access code to order your swag
+            <h3>Your access code:</h3>
+            <h1 id="code"></h1>
+        <div>
+        <iframe id="swag-portal" src="/" style="position:absolute;left:0;width:100%;height:70%;" frameborder="0"></iframe>
+    </body>
+</html>

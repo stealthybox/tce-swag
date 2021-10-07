@@ -1,0 +1,9 @@
+services:
+  tce-swag:
+    image: nginx
+    volumes:
+    - ./index.html:/usr/share/nginx/html/swag/index.html:ro
+    - ./code:/usr/share/nginx/html/code/code:ro
+    - ./conf.d/:/etc/nginx/conf.d/:ro
+    ports:
+    - "8080:80"
