@@ -27,6 +27,13 @@ spec:
           #!/usr/bin/env bash
           function reconcile_session() {
             sessionName=${1}
+
+            # TODO add workspace-environment namespace filter instead of -A
+            if ! kubectl describe deploy -A -l "training.eduk8s.io/session.name=${sessionName}" \
+                  | grep "WORKSHOP_NAME:" | grep "tce-kubecon"
+            then
+              return
+            fi
             
             # we have the workshop session name
             # check if we labeled a code for that session
@@ -62,6 +69,9 @@ spec:
 
           old_hash=""
           reconcile() {
+            echo
+            echo "Reconcile: $(date)"
+
             sessions=$(kubectl get workshopsessions | grep Allocated | awk '{print $1}')
 
             # hash="$(
@@ -78,6 +88,8 @@ spec:
 
             # free memory
             sessions=""
+
+            echo "Finish:    $(date)"
           }
 
           pause_loop() {
@@ -110,7 +122,7 @@ spec:
         - name: CODES_NAMESPACE
           value: default
         - name: SYNC_PERIOD
-          value: "10"
+          value: "100"
 
 ---
 apiVersion: v1
