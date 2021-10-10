@@ -19,34 +19,35 @@
     <script>
         fetch('/code/')
             .then(response => response.text())
-            .then(code => document.getElementById('code').innerText = code)
+            .then(code => document.getElementById('code').value = code)
 
         function copyCode() {
-            var codeElem = document.getElementById("code")
+            let codeElem = document.getElementById("code")
+            codeElem.disabled = false
+            codeElem.select()
+            codeElem.setSelectionRange(0, 99999)
+            document.execCommand('copy')
+            codeElem.setSelectionRange(0, 0)
+            codeElem.disabled = true
 
-            // mobile devices
-            if (codeElem.select != null) {
-                codeElem.select()
-                codeElem.setSelectionRange(0, 99999)
-            }
-
-            navigator.clipboard.writeText(codeElem.innerText)
+            document.getElementById("copy").innerText = "Copy 📋✔"
         }
     </script>
 </head>
 
 <body>
-    <div style="background: #b2e4f5; margin-top: 3em; padding: 1em; border-radius: 2em;">
+    <div style="background: #b2e4f5; margin-top: 2em; margin-bottom: 2em; padding: 1.7em; border-radius: 2em;">
         You've completed the workshop!
 
         <img src="/images/swag-tce-glowy.png" style="max-width: 100%"></img>
 
-        Enter your <i>email</i> and <i>access code</i> to order your swag
+        You'll need your <i>email</i> and <i>access code</i>.
         </br></br>
 
-        Your access code:
-        <h3 id="code"></h3>
-        <button onclick="copyCode()" class="btn btn-success">Copy 📋</button>
+        <label for="code">Your Access Code:</label>
+        <input id="code" type="text" disabled ></input>
+        <br><br>
+        <button id="copy" onclick="copyCode()" class="btn btn-success">Copy 📋</button>
         </br></br>
 
         <a href="https://brandvia.vmware.com" class="btn btn-primary btn-lg">Order Swag</a>
