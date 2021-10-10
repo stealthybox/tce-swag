@@ -1,47 +1,58 @@
 <!DOCTYPE html>
 <html>
-    <head>
+
+<meta charset="utf-8">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+<head>
     <title>Tanzu Community Edition Swag</title>
-        <style>
-            body {
-                width: 28em;
-                margin: 0 auto;
-                font-family: Tahoma, Verdana, Arial, sans-serif;
-                text-align: center;
-                color: #222222;
+    <style>
+        body {
+            width: 28em;
+            margin: 0 auto;
+            font-family: Tahoma, Verdana, Arial, sans-serif;
+            text-align: center;
+            color: #222222;
+        }
+    </style>
+    <script>
+        fetch('/code/')
+            .then(response => response.text())
+            .then(code => document.getElementById('code').innerText = code)
+
+        function copyCode() {
+            var codeElem = document.getElementById("code")
+
+            // mobile devices
+            if (codeElem.select != null) {
+                codeElem.select()
+                codeElem.setSelectionRange(0, 99999)
             }
-        </style>
-        <script>
-            fetch('/code/')
-                .then(response => response.text())
-                .then(code => document.getElementById('code').innerText = code)
 
-                function copyCode() {
-                    var codeElem = document.getElementById("code")
+            navigator.clipboard.writeText(codeElem.innerText)
+        }
+    </script>
+</head>
 
-                    // mobile devices
-                    if (codeElem.select != null) {
-                        codeElem.select()
-                        codeElem.setSelectionRange(0, 99999)
-                    }
+<body>
+    <div style="background: #b2e4f5; margin-top: 3em; padding: 1em; border-radius: 2em;">
+        You've completed the workshop!
 
-                    navigator.clipboard.writeText(codeElem.innerText)
-                }
-        </script>
-    </head>
-    <body>
-        <div style="background: #9acada; margin-top: 3em; padding: 0.01em; border-radius: 2em;">
-            <!-- <h2>Your Access Code:</h1>
-            <h1 id="code"></h1> -->
-            You've completed the workshop!</br>
-            Enter your <i>email</i> and <i>access code</i> to order your swag
-            <h3>Your access code:</h3>
-            <h1 id="code"></h1>
-            <button onclick="copyCode()">Copy code</button>
-        <div>
+        <img src="/images/swag-tce-glowy.png" style="max-width: 100%"></img>
 
-        <h2><a href="https://brandvia.vmware.com">Order Here</a></h2>
-        
-        <!-- <iframe id="swag-portal" src="/" style="position:absolute;left:0;width:100%;height:70%;" frameborder="0"></iframe> -->
-    </body>
+        Enter your <i>email</i> and <i>access code</i> to order your swag
+        </br></br>
+
+        Your access code:
+        <h3 id="code"></h3>
+        <button onclick="copyCode()" class="btn btn-success">Copy 📋</button>
+        </br></br>
+
+        <a href="https://brandvia.vmware.com" class="btn btn-primary btn-lg">Order Swag</a>
+    </div>
+
+    <!-- <iframe id="swag-portal" src="/" style="position:absolute;left:0;width:100%;height:70%;" frameborder="0"></iframe> -->
+</body>
+
 </html>

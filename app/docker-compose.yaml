@@ -4,6 +4,7 @@ services:
     volumes:
     - ./index.html:/usr/share/nginx/html/swag/index.html:ro
     - ./code:/usr/share/nginx/html/code/code:ro
+    - ./images/:/usr/share/nginx/html/images/:ro
     - ./conf.d/:/etc/nginx/conf.d/:ro
     ports:
     - "8080:80"
